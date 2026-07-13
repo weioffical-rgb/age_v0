@@ -491,6 +491,44 @@
       color: var(--muted);
       line-height: 1.65;
       font-size: 0.92rem;
+      white-space: pre-line;
+    }
+
+    .total-days-card {
+      display: none;
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(79, 107, 237, 0.12);
+    }
+
+    .total-days-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+    }
+
+    .total-days-value {
+      margin-top: 6px;
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+    }
+
+    .total-days-number {
+      font-size: 2rem;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--primary-dark);
+      letter-spacing: -0.03em;
+    }
+
+    .total-days-unit {
+      color: #4c5870;
+      font-weight: 900;
     }
 
     .result-actions {
@@ -857,6 +895,14 @@
                   </div>
                 </div>
 
+                <div id="totalDaysCard" class="total-days-card">
+                  <p class="total-days-label">自出生日起累計</p>
+                  <div class="total-days-value">
+                    <span id="totalDaysNumber" class="total-days-number">0</span>
+                    <span class="total-days-unit">天</span>
+                  </div>
+                </div>
+
                 <p id="resultDetail" class="result-detail"></p>
               </div>
 
@@ -961,6 +1007,20 @@
       return new Date(Date.UTC(targetYear, targetMonthIndex, targetDay));
     }
 
+    function calculateTotalDays(birth, reference) {
+      const birthDate = new Date(
+        Date.UTC(birth.year, birth.month - 1, birth.day)
+      );
+      const referenceDate = new Date(
+        Date.UTC(reference.year, reference.month - 1, reference.day)
+      );
+      const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+      return Math.floor(
+        (referenceDate.getTime() - birthDate.getTime()) / millisecondsPerDay
+      );
+    }
+
     function calculateAge(birth, today) {
       const birthDate = new Date(
         Date.UTC(birth.year, birth.month - 1, birth.day)
@@ -1022,6 +1082,8 @@
     const yearsNumber = document.getElementById("yearsNumber");
     const monthsNumber = document.getElementById("monthsNumber");
     const daysNumber = document.getElementById("daysNumber");
+    const totalDaysCard = document.getElementById("totalDaysCard");
+    const totalDaysNumber = document.getElementById("totalDaysNumber");
     const resultDetail = document.getElementById("resultDetail");
     const resultActions = document.getElementById("resultActions");
     const copyButton = document.getElementById("copyButton");
@@ -1355,15 +1417,17 @@
       birthDay.value = birth.day;
     }
 
-    function showResult(age, birth, reference) {
+    function showResult(age, birth, reference, totalDays) {
       emptyState.style.display = "none";
       ageDisplay.style.display = "flex";
+      totalDaysCard.style.display = "block";
       resultDetail.style.display = "block";
       resultActions.style.display = "flex";
 
       yearsNumber.textContent = age.years;
       monthsNumber.textContent = age.months;
       daysNumber.textContent = age.days;
+      totalDaysNumber.textContent = totalDays.toLocaleString("zh-TW");
       const rocBirthYear = birth.year - 1911;
       const rocReferenceYear = reference.year - 1911;
 
@@ -1376,11 +1440,13 @@
       latestResultText = "";
       emptyState.style.display = "block";
       ageDisplay.style.display = "none";
+      totalDaysCard.style.display = "none";
       resultDetail.style.display = "none";
       resultActions.style.display = "none";
       yearsNumber.textContent = "0";
       monthsNumber.textContent = "0";
       daysNumber.textContent = "0";
+      totalDaysNumber.textContent = "0";
       resultDetail.textContent = "";
     }
 
@@ -1437,10 +1503,12 @@
       syncPickerFromManual();
 
       const age = calculateAge(birth, reference);
-      showResult(age, birth, reference);
+      const totalDays = calculateTotalDays(birth, reference);
+      showResult(age, birth, reference, totalDays);
 
       latestResultText =
-        `實足年齡：${age.years} 年 ${age.months} 個月 ${age.days} 天` +
+        `實足年齡：${age.years} 年 ${age.months} 個月 ${age.days} 天；` +
+        `總天數：${totalDays.toLocaleString("zh-TW")} 天` +
         `（出生日期：${formatDate(birth)}／民國 ${birth.year - 1911} 年 ${birth.month} 月 ${birth.day} 日；` +
         `計算基準日：${formatDate(reference)}／民國 ${reference.year - 1911} 年 ${reference.month} 月 ${reference.day} 日）`;
     }
