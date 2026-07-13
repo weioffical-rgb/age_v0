@@ -122,7 +122,7 @@
 
     .main-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 350px;
+      grid-template-columns: minmax(0, 1fr) 390px;
       gap: 22px;
       align-items: start;
     }
@@ -163,25 +163,123 @@
       font-weight: 900;
     }
 
-    .picker-input {
+    .year-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .year-label-row label {
+      margin-bottom: 0;
+    }
+
+    .calendar-toggle {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 11px;
+      background: #eef1f6;
+      border: 1px solid #dce2ec;
+    }
+
+    .calendar-toggle button {
+      min-width: 52px;
+      padding: 6px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .calendar-toggle button.active {
+      background: white;
+      color: var(--primary-dark);
+      box-shadow: 0 3px 10px rgba(79, 107, 237, 0.12);
+    }
+
+    .picker-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .picker-heading-row .section-description {
+      margin-bottom: 0;
+    }
+
+    .reference-mode-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 6px;
+    }
+
+    .reference-mode-row .section-description {
+      margin: 0;
+    }
+
+    .reference-panel {
+      display: none;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(105, 115, 134, 0.16);
+    }
+
+    .reference-panel.show {
+      display: block;
+      animation: fadeUp 0.22s ease;
+    }
+
+    .reference-calendar-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .reference-summary {
+      margin: 14px 0 0;
+      padding: 11px 13px;
+      border-radius: 12px;
+      background: rgba(79, 107, 237, 0.07);
+      color: var(--primary-dark);
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+
+    .picker-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .picker-select {
       width: 100%;
       height: 66px;
-      padding: 0 17px;
+      padding: 0 14px;
       border: 1.5px solid var(--line);
       border-radius: 15px;
       background: white;
       color: var(--text);
-      font-size: 1.2rem;
+      font-size: 1.12rem;
       font-weight: 800;
+      cursor: pointer;
       transition: 0.2s ease;
     }
 
-    .picker-input:hover,
+    .picker-select:hover,
     .number-input:hover {
       border-color: #b8c4dc;
     }
 
-    .picker-input:focus,
+    .picker-select:focus,
     .number-input:focus {
       outline: none;
       border-color: var(--primary);
@@ -361,9 +459,10 @@
 
     .age-display {
       display: none;
-      margin-top: 14px;
-      flex-direction: column;
-      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 16px 18px;
     }
 
     .age-block {
@@ -373,7 +472,7 @@
     }
 
     .age-number {
-      font-size: clamp(3rem, 7vw, 4.6rem);
+      font-size: clamp(2.5rem, 5vw, 3.8rem);
       line-height: 0.95;
       font-weight: 900;
       letter-spacing: -0.05em;
@@ -512,8 +611,19 @@
         padding: 0 22px 24px;
       }
 
-      .date-grid {
+      .date-grid,
+      .picker-grid {
         grid-template-columns: 1fr;
+      }
+
+      .picker-heading-row,
+      .reference-mode-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .reference-calendar-row {
+        justify-content: flex-start;
       }
     }
 
@@ -540,7 +650,7 @@
         </div>
         <div>
           <h1 id="pageTitle">實際年齡計算器</h1>
-          <p class="subtitle">選擇或輸入出生日期，結果會直接顯示在右側。</p>
+          <p class="subtitle">選擇或輸入出生日期，並可指定衡鑑日或其他計算基準日。</p>
         </div>
       </header>
 
@@ -551,23 +661,55 @@
           <div class="input-column">
             <section class="entry-card">
               <h2 class="section-title">選擇出生日期</h2>
-              <p class="section-description">點選日期欄位後，從日曆中選擇個案的出生日期。</p>
 
-              <div class="field">
-                <label for="birthDatePicker">出生日期</label>
-                <input id="birthDatePicker" class="picker-input" type="date" autocomplete="off" />
+              <div class="picker-heading-row">
+                <p class="section-description">可用西元或民國年份，從選單選擇出生年、月、日。</p>
+
+                <div class="calendar-toggle" aria-label="上方選單年份格式">
+                  <button id="pickerGregorianButton" class="active" type="button">西元</button>
+                  <button id="pickerRocButton" type="button">民國</button>
+                </div>
               </div>
 
-              <p class="helper">選擇後會自動帶入下方的年、月、日欄位。</p>
+              <div class="picker-grid">
+                <div class="field">
+                  <label for="pickerYear">出生年</label>
+                  <select id="pickerYear" class="picker-select">
+                    <option value="">選擇年</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="pickerMonth">出生月</label>
+                  <select id="pickerMonth" class="picker-select">
+                    <option value="">選擇月</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="pickerDay">出生日</label>
+                  <select id="pickerDay" class="picker-select">
+                    <option value="">選擇日</option>
+                  </select>
+                </div>
+              </div>
+
+              <p class="helper">切換西元或民國時，已選擇的日期會自動保留並換算顯示。</p>
             </section>
 
             <section class="entry-card">
               <h2 class="section-title">直接輸入年月日</h2>
-              <p class="section-description">也可以直接輸入西元出生年、出生月與出生日。</p>
+              <p class="section-description">也可以直接輸入出生年、出生月與出生日，年份可切換西元或民國。</p>
 
               <div class="date-grid">
                 <div class="field">
-                  <label for="birthYear">出生年</label>
+                  <div class="year-label-row">
+                    <label for="birthYear">出生年</label>
+                    <div class="calendar-toggle" aria-label="年份格式">
+                      <button id="gregorianButton" class="active" type="button">西元</button>
+                      <button id="rocButton" type="button">民國</button>
+                    </div>
+                  </div>
                   <input
                     id="birthYear"
                     class="number-input"
@@ -623,8 +765,55 @@
               </div>
 
               <p class="helper">
-                年份可直接輸入；按住 ±1 或 ±10 可連續調整。滑鼠滾輪每格調整 1 年，按住 Shift 則調整 10 年。
+                年份可切換西元或民國並直接輸入；按住 ±1 或 ±10 可連續調整。滑鼠滾輪每格調整 1 年，按住 Shift 則調整 10 年。
               </p>
+            </section>
+
+            <section class="entry-card">
+              <h2 class="section-title">計算基準日</h2>
+
+              <div class="reference-mode-row">
+                <p class="section-description">預設以今天計算，也可以指定衡鑑日、門診日或其他日期。</p>
+
+                <div class="calendar-toggle" aria-label="計算基準日模式">
+                  <button id="useTodayButton" class="active" type="button">今天</button>
+                  <button id="useCustomDateButton" type="button">指定日期</button>
+                </div>
+              </div>
+
+              <div id="referencePanel" class="reference-panel">
+                <div class="reference-calendar-row">
+                  <div class="calendar-toggle" aria-label="基準日年份格式">
+                    <button id="referenceGregorianButton" class="active" type="button">西元</button>
+                    <button id="referenceRocButton" type="button">民國</button>
+                  </div>
+                </div>
+
+                <div class="picker-grid">
+                  <div class="field">
+                    <label for="referenceYear">基準年</label>
+                    <select id="referenceYear" class="picker-select">
+                      <option value="">選擇年</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="referenceMonth">基準月</label>
+                    <select id="referenceMonth" class="picker-select">
+                      <option value="">選擇月</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="referenceDay">基準日</label>
+                    <select id="referenceDay" class="picker-select">
+                      <option value="">選擇日</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <p id="referenceSummary" class="reference-summary"></p>
             </section>
 
             <div class="action-row">
@@ -660,6 +849,11 @@
                   <div class="age-block">
                     <span id="monthsNumber" class="age-number">0</span>
                     <span class="age-unit">個月</span>
+                  </div>
+
+                  <div class="age-block">
+                    <span id="daysNumber" class="age-number">0</span>
+                    <span class="age-unit">天</span>
                   </div>
                 </div>
 
@@ -734,30 +928,100 @@
       );
     }
 
+    function daysInMonth(year, month) {
+      return new Date(Date.UTC(year, month, 0)).getUTCDate();
+    }
+
+    function compareDateObjects(a, b) {
+      return a.getTime() - b.getTime();
+    }
+
+    function addYearsClamped(date, yearsToAdd) {
+      const targetYear = date.getUTCFullYear() + yearsToAdd;
+      const targetMonth = date.getUTCMonth() + 1;
+      const targetDay = Math.min(
+        date.getUTCDate(),
+        daysInMonth(targetYear, targetMonth)
+      );
+
+      return new Date(Date.UTC(targetYear, targetMonth - 1, targetDay));
+    }
+
+    function addMonthsClamped(date, monthsToAdd) {
+      const totalMonths =
+        date.getUTCFullYear() * 12 + date.getUTCMonth() + monthsToAdd;
+      const targetYear = Math.floor(totalMonths / 12);
+      const targetMonthIndex = totalMonths % 12;
+      const targetMonth = targetMonthIndex + 1;
+      const targetDay = Math.min(
+        date.getUTCDate(),
+        daysInMonth(targetYear, targetMonth)
+      );
+
+      return new Date(Date.UTC(targetYear, targetMonthIndex, targetDay));
+    }
+
     function calculateAge(birth, today) {
+      const birthDate = new Date(
+        Date.UTC(birth.year, birth.month - 1, birth.day)
+      );
+      const todayDate = new Date(
+        Date.UTC(today.year, today.month - 1, today.day)
+      );
+
       let years = today.year - birth.year;
-      let months = today.month - birth.month;
+      let yearCursor = addYearsClamped(birthDate, years);
 
-      if (today.day < birth.day) months -= 1;
-
-      if (months < 0) {
+      if (compareDateObjects(yearCursor, todayDate) > 0) {
         years -= 1;
-        months += 12;
+        yearCursor = addYearsClamped(birthDate, years);
       }
 
-      return { years, months };
+      let months =
+        (todayDate.getUTCFullYear() - yearCursor.getUTCFullYear()) * 12 +
+        (todayDate.getUTCMonth() - yearCursor.getUTCMonth());
+
+      let monthCursor = addMonthsClamped(yearCursor, months);
+
+      if (compareDateObjects(monthCursor, todayDate) > 0) {
+        months -= 1;
+        monthCursor = addMonthsClamped(yearCursor, months);
+      }
+
+      const millisecondsPerDay = 24 * 60 * 60 * 1000;
+      const days = Math.floor(
+        (todayDate.getTime() - monthCursor.getTime()) / millisecondsPerDay
+      );
+
+      return { years, months, days };
     }
 
     const birthYear = document.getElementById("birthYear");
+    const gregorianButton = document.getElementById("gregorianButton");
+    const rocButton = document.getElementById("rocButton");
     const birthMonth = document.getElementById("birthMonth");
     const birthDay = document.getElementById("birthDay");
-    const birthDatePicker = document.getElementById("birthDatePicker");
+    const pickerGregorianButton = document.getElementById("pickerGregorianButton");
+    const pickerRocButton = document.getElementById("pickerRocButton");
+    const pickerYear = document.getElementById("pickerYear");
+    const pickerMonth = document.getElementById("pickerMonth");
+    const pickerDay = document.getElementById("pickerDay");
+    const useTodayButton = document.getElementById("useTodayButton");
+    const useCustomDateButton = document.getElementById("useCustomDateButton");
+    const referencePanel = document.getElementById("referencePanel");
+    const referenceGregorianButton = document.getElementById("referenceGregorianButton");
+    const referenceRocButton = document.getElementById("referenceRocButton");
+    const referenceYear = document.getElementById("referenceYear");
+    const referenceMonth = document.getElementById("referenceMonth");
+    const referenceDay = document.getElementById("referenceDay");
+    const referenceSummary = document.getElementById("referenceSummary");
     const calculateButton = document.getElementById("calculateButton");
     const errorMessage = document.getElementById("errorMessage");
     const emptyState = document.getElementById("emptyState");
     const ageDisplay = document.getElementById("ageDisplay");
     const yearsNumber = document.getElementById("yearsNumber");
     const monthsNumber = document.getElementById("monthsNumber");
+    const daysNumber = document.getElementById("daysNumber");
     const resultDetail = document.getElementById("resultDetail");
     const resultActions = document.getElementById("resultActions");
     const copyButton = document.getElementById("copyButton");
@@ -766,12 +1030,23 @@
     const toast = document.getElementById("toast");
 
     let latestResultText = "";
+    let yearMode = "gregorian";
+    let pickerYearMode = "gregorian";
+    let referenceMode = "today";
+    let referenceYearMode = "gregorian";
 
     function refreshToday() {
       const today = getTaipeiToday();
-      birthDatePicker.max = toISODate(today);
-      birthYear.max = today.year;
-      todayChip.textContent = `今天：${formatDate(today)}（台灣時間）`;
+
+      if (yearMode === "roc") {
+        birthYear.min = 1;
+        birthYear.max = today.year - 1911;
+      } else {
+        birthYear.min = 1900;
+        birthYear.max = today.year;
+      }
+
+      todayChip.textContent = `今天：${formatDate(today)}（民國 ${today.year - 1911} 年 ${today.month} 月 ${today.day} 日，台灣時間）`;
       return today;
     }
 
@@ -792,30 +1067,295 @@
       showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
     }
 
+    function populatePickerYears(preserveGregorianYear = "") {
+      const today = getTaipeiToday();
+      pickerYear.innerHTML = '<option value="">選擇年</option>';
+
+      for (let year = today.year; year >= 1900; year -= 1) {
+        const option = document.createElement("option");
+        option.value = String(year);
+        option.textContent =
+          pickerYearMode === "roc"
+            ? `民國 ${year - 1911} 年`
+            : `${year} 年`;
+        pickerYear.appendChild(option);
+      }
+
+      if (preserveGregorianYear) {
+        pickerYear.value = String(preserveGregorianYear);
+      }
+    }
+
+    function populatePickerMonths() {
+      pickerMonth.innerHTML = '<option value="">選擇月</option>';
+
+      for (let month = 1; month <= 12; month += 1) {
+        const option = document.createElement("option");
+        option.value = String(month);
+        option.textContent = `${month} 月`;
+        pickerMonth.appendChild(option);
+      }
+    }
+
+    function populatePickerDays(preserveDay = "") {
+      const selectedYear = Number(pickerYear.value);
+      const selectedMonth = Number(pickerMonth.value);
+      const maximumDay =
+        selectedYear && selectedMonth
+          ? daysInMonth(selectedYear, selectedMonth)
+          : 31;
+
+      pickerDay.innerHTML = '<option value="">選擇日</option>';
+
+      for (let day = 1; day <= maximumDay; day += 1) {
+        const option = document.createElement("option");
+        option.value = String(day);
+        option.textContent = `${day} 日`;
+        pickerDay.appendChild(option);
+      }
+
+      if (preserveDay && Number(preserveDay) <= maximumDay) {
+        pickerDay.value = String(preserveDay);
+      }
+    }
+
+    function setPickerYearMode(newMode) {
+      if (newMode === pickerYearMode) return;
+
+      const selectedGregorianYear = pickerYear.value;
+      pickerYearMode = newMode;
+
+      pickerGregorianButton.classList.toggle(
+        "active",
+        pickerYearMode === "gregorian"
+      );
+      pickerRocButton.classList.toggle(
+        "active",
+        pickerYearMode === "roc"
+      );
+
+      populatePickerYears(selectedGregorianYear);
+    }
+
+    function getBirthFromPicker() {
+      if (!pickerYear.value || !pickerMonth.value || !pickerDay.value) {
+        return null;
+      }
+
+      return {
+        year: Number(pickerYear.value),
+        month: Number(pickerMonth.value),
+        day: Number(pickerDay.value)
+      };
+    }
+
+    function populateReferenceYears(preserveGregorianYear = "") {
+      const today = getTaipeiToday();
+      referenceYear.innerHTML = '<option value="">選擇年</option>';
+
+      for (let year = today.year; year >= 1900; year -= 1) {
+        const option = document.createElement("option");
+        option.value = String(year);
+        option.textContent =
+          referenceYearMode === "roc"
+            ? `民國 ${year - 1911} 年`
+            : `${year} 年`;
+        referenceYear.appendChild(option);
+      }
+
+      if (preserveGregorianYear) {
+        referenceYear.value = String(preserveGregorianYear);
+      }
+    }
+
+    function populateReferenceMonths() {
+      referenceMonth.innerHTML = '<option value="">選擇月</option>';
+
+      for (let month = 1; month <= 12; month += 1) {
+        const option = document.createElement("option");
+        option.value = String(month);
+        option.textContent = `${month} 月`;
+        referenceMonth.appendChild(option);
+      }
+    }
+
+    function populateReferenceDays(preserveDay = "") {
+      const selectedYear = Number(referenceYear.value);
+      const selectedMonth = Number(referenceMonth.value);
+      const maximumDay =
+        selectedYear && selectedMonth
+          ? daysInMonth(selectedYear, selectedMonth)
+          : 31;
+
+      referenceDay.innerHTML = '<option value="">選擇日</option>';
+
+      for (let day = 1; day <= maximumDay; day += 1) {
+        const option = document.createElement("option");
+        option.value = String(day);
+        option.textContent = `${day} 日`;
+        referenceDay.appendChild(option);
+      }
+
+      if (preserveDay && Number(preserveDay) <= maximumDay) {
+        referenceDay.value = String(preserveDay);
+      }
+    }
+
+    function setReferenceYearMode(newMode) {
+      if (newMode === referenceYearMode) return;
+
+      const selectedGregorianYear = referenceYear.value;
+      referenceYearMode = newMode;
+
+      referenceGregorianButton.classList.toggle(
+        "active",
+        referenceYearMode === "gregorian"
+      );
+      referenceRocButton.classList.toggle(
+        "active",
+        referenceYearMode === "roc"
+      );
+
+      populateReferenceYears(selectedGregorianYear);
+      updateReferenceSummary();
+    }
+
+    function setReferenceToToday() {
+      const today = getTaipeiToday();
+      referenceYear.value = String(today.year);
+      referenceMonth.value = String(today.month);
+      populateReferenceDays(today.day);
+      referenceDay.value = String(today.day);
+    }
+
+    function getCustomReferenceDate() {
+      if (!referenceYear.value || !referenceMonth.value || !referenceDay.value) {
+        return null;
+      }
+
+      return {
+        year: Number(referenceYear.value),
+        month: Number(referenceMonth.value),
+        day: Number(referenceDay.value)
+      };
+    }
+
+    function getReferenceDate() {
+      return referenceMode === "today"
+        ? getTaipeiToday()
+        : getCustomReferenceDate();
+    }
+
+    function updateReferenceSummary() {
+      if (referenceMode === "today") {
+        const today = getTaipeiToday();
+        referenceSummary.textContent =
+          `目前以今天 ${formatDate(today)}（民國 ${today.year - 1911} 年 ${today.month} 月 ${today.day} 日）計算。`;
+        return;
+      }
+
+      const reference = getCustomReferenceDate();
+
+      if (!reference) {
+        referenceSummary.textContent = "請選擇完整的計算基準日期。";
+        return;
+      }
+
+      referenceSummary.textContent =
+        `目前以 ${formatDate(reference)}（民國 ${reference.year - 1911} 年 ${reference.month} 月 ${reference.day} 日）計算。`;
+    }
+
+    function setReferenceMode(newMode) {
+      referenceMode = newMode;
+      const useToday = referenceMode === "today";
+
+      useTodayButton.classList.toggle("active", useToday);
+      useCustomDateButton.classList.toggle("active", !useToday);
+      referencePanel.classList.toggle("show", !useToday);
+
+      if (!useToday && !getCustomReferenceDate()) {
+        setReferenceToToday();
+      }
+
+      updateReferenceSummary();
+
+      const birth = getBirthFromManualFields() || getBirthFromPicker();
+      if (birth) {
+        runCalculation();
+      }
+    }
+
+    function displayYearToGregorian(displayYear) {
+      return yearMode === "roc" ? displayYear + 1911 : displayYear;
+    }
+
+    function gregorianYearToDisplay(gregorianYear) {
+      return yearMode === "roc" ? gregorianYear - 1911 : gregorianYear;
+    }
+
+    function setYearMode(newMode) {
+      if (newMode === yearMode) return;
+
+      const currentValue = Number(birthYear.value);
+      const hasCurrentValue = birthYear.value !== "" && Number.isFinite(currentValue);
+
+      if (hasCurrentValue) {
+        const gregorianYear =
+          yearMode === "roc" ? currentValue + 1911 : currentValue;
+        birthYear.value =
+          newMode === "roc" ? gregorianYear - 1911 : gregorianYear;
+      }
+
+      yearMode = newMode;
+      gregorianButton.classList.toggle("active", yearMode === "gregorian");
+      rocButton.classList.toggle("active", yearMode === "roc");
+
+      if (yearMode === "roc") {
+        birthYear.placeholder = "84";
+      } else {
+        birthYear.placeholder = "1995";
+      }
+
+      refreshToday();
+      syncPickerFromManual();
+
+      const birth = getBirthFromManualFields();
+      if (birth && isValidDate(birth.year, birth.month, birth.day)) {
+        runCalculation();
+      }
+    }
+
     function getBirthFromManualFields() {
-      const year = Number(birthYear.value);
+      const displayYear = Number(birthYear.value);
       const month = Number(birthMonth.value);
       const day = Number(birthDay.value);
 
       if (!birthYear.value || !birthMonth.value || !birthDay.value) return null;
+
+      const year = displayYearToGregorian(displayYear);
       return { year, month, day };
     }
 
     function syncPickerFromManual() {
       const birth = getBirthFromManualFields();
       if (!birth || !isValidDate(birth.year, birth.month, birth.day)) return;
-      birthDatePicker.value = toISODate(birth);
+
+      pickerYear.value = String(birth.year);
+      pickerMonth.value = String(birth.month);
+      populatePickerDays(birth.day);
+      pickerDay.value = String(birth.day);
     }
 
     function syncManualFromPicker() {
-      if (!birthDatePicker.value) return;
-      const [year, month, day] = birthDatePicker.value.split("-").map(Number);
-      birthYear.value = year;
-      birthMonth.value = month;
-      birthDay.value = day;
+      const birth = getBirthFromPicker();
+      if (!birth) return;
+
+      birthYear.value = gregorianYearToDisplay(birth.year);
+      birthMonth.value = birth.month;
+      birthDay.value = birth.day;
     }
 
-    function showResult(age, birth, today) {
+    function showResult(age, birth, reference) {
       emptyState.style.display = "none";
       ageDisplay.style.display = "flex";
       resultDetail.style.display = "block";
@@ -823,8 +1363,13 @@
 
       yearsNumber.textContent = age.years;
       monthsNumber.textContent = age.months;
+      daysNumber.textContent = age.days;
+      const rocBirthYear = birth.year - 1911;
+      const rocReferenceYear = reference.year - 1911;
+
       resultDetail.textContent =
-        `出生日期：${formatDate(birth)}\n計算基準日：${formatDate(today)}`;
+        `出生日期：${formatDate(birth)}（民國 ${rocBirthYear} 年 ${birth.month} 月 ${birth.day} 日）\n` +
+        `計算基準日：${formatDate(reference)}（民國 ${rocReferenceYear} 年 ${reference.month} 月 ${reference.day} 日）`;
     }
 
     function resetResult() {
@@ -835,6 +1380,7 @@
       resultActions.style.display = "none";
       yearsNumber.textContent = "0";
       monthsNumber.textContent = "0";
+      daysNumber.textContent = "0";
       resultDetail.textContent = "";
     }
 
@@ -843,13 +1389,12 @@
 
       let birth = getBirthFromManualFields();
 
-      if (!birth && birthDatePicker.value) {
-        const [year, month, day] = birthDatePicker.value.split("-").map(Number);
-        birth = { year, month, day };
+      if (!birth) {
+        birth = getBirthFromPicker();
       }
 
       if (!birth) {
-        showError("請先選擇出生日期，或輸入完整的出生年、月、日。");
+        showError("請先從上方選單選擇完整日期，或輸入完整的出生年、月、日。");
         return;
       }
 
@@ -858,25 +1403,46 @@
         return;
       }
 
-      const today = refreshToday();
+      refreshToday();
 
       if (birth.year < 1900) {
         showError("目前僅接受 1900 年以後的出生日期。");
         return;
       }
 
-      if (compareDates(birth, today) > 0) {
-        showError("出生日期不可晚於今天。");
+      const reference = getReferenceDate();
+
+      if (!reference) {
+        showError("請選擇完整的計算基準日期。");
+        return;
+      }
+
+      if (!isValidDate(reference.year, reference.month, reference.day)) {
+        showError("計算基準日期格式不正確。");
+        return;
+      }
+
+      const today = getTaipeiToday();
+
+      if (compareDates(reference, today) > 0) {
+        showError("計算基準日不可晚於今天。");
+        return;
+      }
+
+      if (compareDates(birth, reference) > 0) {
+        showError("出生日期不可晚於計算基準日。");
         return;
       }
 
       syncPickerFromManual();
 
-      const age = calculateAge(birth, today);
-      showResult(age, birth, today);
+      const age = calculateAge(birth, reference);
+      showResult(age, birth, reference);
 
       latestResultText =
-        `實足年齡：${age.years} 年 ${age.months} 個月（出生日期：${formatDate(birth)}；計算日：${formatDate(today)}）`;
+        `實足年齡：${age.years} 年 ${age.months} 個月 ${age.days} 天` +
+        `（出生日期：${formatDate(birth)}／民國 ${birth.year - 1911} 年 ${birth.month} 月 ${birth.day} 日；` +
+        `計算基準日：${formatDate(reference)}／民國 ${reference.year - 1911} 年 ${reference.month} 月 ${reference.day} 日）`;
     }
 
     function adjustYear(amount) {
@@ -884,10 +1450,13 @@
       let current = Number(birthYear.value);
 
       if (!Number.isFinite(current) || !birthYear.value) {
-        current = today.year - 30;
+        current = gregorianYearToDisplay(today.year - 30);
       }
 
-      current = Math.min(today.year, Math.max(1900, current + amount));
+      const minimum = yearMode === "roc" ? 1 : 1900;
+      const maximum = gregorianYearToDisplay(today.year);
+
+      current = Math.min(maximum, Math.max(minimum, current + amount));
       birthYear.value = current;
       syncPickerFromManual();
 
@@ -927,13 +1496,16 @@
       });
     }
 
+    gregorianButton.addEventListener("click", () => setYearMode("gregorian"));
+    rocButton.addEventListener("click", () => setYearMode("roc"));
+
     document.querySelectorAll("[data-year-step]").forEach(setupHoldButton);
 
     document.querySelectorAll("[data-age]").forEach((button) => {
       button.addEventListener("click", () => {
-        const today = getTaipeiToday();
+        const reference = getReferenceDate() || getTaipeiToday();
         const age = Number(button.dataset.age);
-        birthYear.value = today.year - age;
+        birthYear.value = gregorianYearToDisplay(reference.year - age);
         syncPickerFromManual();
 
         if (birthMonth.value && birthDay.value) runCalculation();
@@ -964,9 +1536,83 @@
       });
     });
 
-    birthDatePicker.addEventListener("change", () => {
+    pickerGregorianButton.addEventListener(
+      "click",
+      () => setPickerYearMode("gregorian")
+    );
+
+    pickerRocButton.addEventListener(
+      "click",
+      () => setPickerYearMode("roc")
+    );
+
+    pickerYear.addEventListener("change", () => {
+      populatePickerDays(pickerDay.value);
       syncManualFromPicker();
-      runCalculation();
+
+      if (getBirthFromPicker()) {
+        runCalculation();
+      }
+    });
+
+    pickerMonth.addEventListener("change", () => {
+      populatePickerDays(pickerDay.value);
+      syncManualFromPicker();
+
+      if (getBirthFromPicker()) {
+        runCalculation();
+      }
+    });
+
+    pickerDay.addEventListener("change", () => {
+      syncManualFromPicker();
+
+      if (getBirthFromPicker()) {
+        runCalculation();
+      }
+    });
+
+    useTodayButton.addEventListener(
+      "click",
+      () => setReferenceMode("today")
+    );
+
+    useCustomDateButton.addEventListener(
+      "click",
+      () => setReferenceMode("custom")
+    );
+
+    referenceGregorianButton.addEventListener(
+      "click",
+      () => setReferenceYearMode("gregorian")
+    );
+
+    referenceRocButton.addEventListener(
+      "click",
+      () => setReferenceYearMode("roc")
+    );
+
+    referenceYear.addEventListener("change", () => {
+      populateReferenceDays(referenceDay.value);
+      updateReferenceSummary();
+
+      const birth = getBirthFromManualFields() || getBirthFromPicker();
+      if (birth && getCustomReferenceDate()) runCalculation();
+    });
+
+    referenceMonth.addEventListener("change", () => {
+      populateReferenceDays(referenceDay.value);
+      updateReferenceSummary();
+
+      const birth = getBirthFromManualFields() || getBirthFromPicker();
+      if (birth && getCustomReferenceDate()) runCalculation();
+    });
+
+    referenceDay.addEventListener("change", () => {
+      updateReferenceSummary();
+
+      const birth = getBirthFromManualFields() || getBirthFromPicker();
+      if (birth && getCustomReferenceDate()) runCalculation();
     });
 
     calculateButton.addEventListener("click", runCalculation);
@@ -992,13 +1638,24 @@
       birthYear.value = "";
       birthMonth.value = "";
       birthDay.value = "";
-      birthDatePicker.value = "";
+      pickerYear.value = "";
+      pickerMonth.value = "";
+      populatePickerDays();
+      pickerDay.value = "";
       hideError();
       resetResult();
-      birthDatePicker.focus();
+      pickerYear.focus();
     });
 
     refreshToday();
+    populatePickerYears();
+    populatePickerMonths();
+    populatePickerDays();
+    populateReferenceYears();
+    populateReferenceMonths();
+    populateReferenceDays();
+    setReferenceToToday();
+    updateReferenceSummary();
     resetResult();
   </script>
 </body>
