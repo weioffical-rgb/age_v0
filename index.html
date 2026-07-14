@@ -992,6 +992,20 @@
       return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
     }
 
+    function formatRocYear(gregorianYear) {
+      const rocYear = gregorianYear - 1911;
+
+      if (rocYear > 0) {
+        return `民國 ${rocYear} 年`;
+      }
+
+      return `民國前 ${Math.abs(rocYear) + 1} 年`;
+    }
+
+    function formatRocDate(date) {
+      return `${formatRocYear(date.year)} ${date.month} 月 ${date.day} 日`;
+    }
+
     function formatDate(date) {
       return `${date.year} 年 ${date.month} 月 ${date.day} 日`;
     }
@@ -1146,7 +1160,7 @@
         birthYear.max = today.year;
       }
 
-      todayChip.textContent = `今天：${formatDate(today)}（民國 ${today.year - 1911} 年 ${today.month} 月 ${today.day} 日，台灣時間）`;
+      todayChip.textContent = `今天：${formatDate(today)}（${formatRocDate(today)}，台灣時間）`;
       return today;
     }
 
@@ -1176,7 +1190,7 @@
         option.value = String(year);
         option.textContent =
           pickerYearMode === "roc"
-            ? `民國 ${year - 1911} 年`
+            ? formatRocYear(year)
             : `${year} 年`;
         pickerYear.appendChild(option);
       }
@@ -1258,7 +1272,7 @@
         option.value = String(year);
         option.textContent =
           referenceYearMode === "roc"
-            ? `民國 ${year - 1911} 年`
+            ? formatRocYear(year)
             : `${year} 年`;
         referenceYear.appendChild(option);
       }
@@ -1350,7 +1364,7 @@
       if (referenceMode === "today") {
         const today = getTaipeiToday();
         referenceSummary.textContent =
-          `目前以今天 ${formatDate(today)}（民國 ${today.year - 1911} 年 ${today.month} 月 ${today.day} 日）計算。`;
+          `目前以今天 ${formatDate(today)}（${formatRocDate(today)}）計算。`;
         return;
       }
 
@@ -1362,7 +1376,7 @@
       }
 
       referenceSummary.textContent =
-        `目前以 ${formatDate(reference)}（民國 ${reference.year - 1911} 年 ${reference.month} 月 ${reference.day} 日）計算。`;
+        `目前以 ${formatDate(reference)}（${formatRocDate(reference)}）計算。`;
     }
 
     function setReferenceMode(newMode) {
@@ -1466,12 +1480,9 @@
       monthsNumber.textContent = age.months;
       daysNumber.textContent = age.days;
       totalDaysNumber.textContent = totalDays.toLocaleString("zh-TW");
-      const rocBirthYear = birth.year - 1911;
-      const rocReferenceYear = reference.year - 1911;
-
       resultDetail.textContent =
-        `出生日期：${formatDate(birth)}（民國 ${rocBirthYear} 年 ${birth.month} 月 ${birth.day} 日）\n` +
-        `計算基準日：${formatDate(reference)}（民國 ${rocReferenceYear} 年 ${reference.month} 月 ${reference.day} 日）`;
+        `出生日期：${formatDate(birth)}（${formatRocDate(birth)}）\n` +
+        `計算基準日：${formatDate(reference)}（${formatRocDate(reference)}）`;
     }
 
     function resetResult() {
@@ -1547,8 +1558,8 @@
       latestResultText =
         `實足年齡：${age.years} 年 ${age.months} 個月 ${age.days} 天；` +
         `總天數：${totalDays.toLocaleString("zh-TW")} 天` +
-        `（出生日期：${formatDate(birth)}／民國 ${birth.year - 1911} 年 ${birth.month} 月 ${birth.day} 日；` +
-        `計算基準日：${formatDate(reference)}／民國 ${reference.year - 1911} 年 ${reference.month} 月 ${reference.day} 日）`;
+        `（出生日期：${formatDate(birth)}／${formatRocDate(birth)}；` +
+        `計算基準日：${formatDate(reference)}／${formatRocDate(reference)}）`;
     }
 
     function adjustYear(amount) {
