@@ -849,7 +849,7 @@
               <h2 class="section-title">計算基準日</h2>
 
               <div class="reference-mode-row">
-                <p class="section-description">預設以今天計算，也可以指定衡鑑日、門診日或其他日期。</p>
+                <p class="section-description">預設以今天計算，也可以指定過去或未來的衡鑑日、門診日或其他日期。</p>
 
                 <div class="calendar-toggle" aria-label="計算基準日模式">
                   <button id="useTodayButton" class="active" type="button">今天</button>
@@ -1264,10 +1264,9 @@
     }
 
     function populateReferenceYears(preserveGregorianYear = "") {
-      const today = getTaipeiToday();
       referenceYear.innerHTML = '<option value="">選擇年</option>';
 
-      for (let year = today.year; year >= 1900; year -= 1) {
+      for (let year = 2100; year >= 1900; year -= 1) {
         const option = document.createElement("option");
         option.value = String(year);
         option.textContent =
@@ -1534,13 +1533,6 @@
 
       if (!isValidDate(reference.year, reference.month, reference.day)) {
         showError("計算基準日期格式不正確。");
-        return;
-      }
-
-      const today = getTaipeiToday();
-
-      if (compareDates(reference, today) > 0) {
-        showError("計算基準日不可晚於今天。");
         return;
       }
 
